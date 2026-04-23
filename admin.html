@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎣 捕鱼达人 · 管理后台</title>
+<style>
+  :root {
+    --primary: #00d4ff;
+    --accent:  #ff6600;
+    --bg:      #060e1a;
+    --surface: #0d1f35;
+    --border:  #1a3a5c;
+    --text:    #d0e8ff;
+    --muted:   #5580a0;
+    --success: #00e676;
+    --warn:    #ffab40;
+    --danger:  #ff4444;
+    --lv1: #CD7F32; --lv2: #C0C0C0; --lv3: #FFD700; --lv4: #FF4500; --lv5: #FF00FF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Microsoft YaHei', 'PingFang SC', system-ui, sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+  /* ── 顶部导航 ── */
+  header {
+    background: linear-gradient(135deg, #001a40, #002a60);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 { font-size: 1.2rem; color: var(--primary); display:flex;align-items:center;gap:10px; }
+  header .status { font-size: 12px; padding: 4px 12px; border-radius: 12px; }
+  header .status.ok  { background: rgba(0,230,118,.15); color: var(--success); border: 1px solid var(--success); }
+  header .status.err { background: rgba(255,68,68,.15);  color: var(--danger);  border: 1px solid var(--danger); }
+
+  /* ── 主布局 ── */
+  .layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 56px); }
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 12px 0;
+  }
+  .sidebar nav a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px;
+    color: var(--muted);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all .2s;
+    border-left: 3px solid transparent;
+  }
+  .sidebar nav a:hover, .sidebar nav a.active {
+    color: var(--primary);
+    background: rgba(0,212,255,.05);
+    border-left-color: var(--primary);
+  }
+  .main { padding: 24px; overflow-y: auto; }
+
+  /* ── 通用 ── */
+  .section { display: none; }
+  .section.active { display: block; }
+  h2 { font-size: 1.1rem; color: var(--primary); margin-bottom: 18px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: .95rem; color: var(--warn); margin: 18px 0 10px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+  .btn { display:inline-flex;align-items:center;gap:6px; padding:7px 18px; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; transition: all .2s; }
+  .btn-primary { background: var(--primary); color: #000; }
+  .btn-primary:hover { background: #33ddff; }
+  .btn-success { background: var(--success); color: #000; }
+  .btn-danger  { background: var(--danger);  color: #fff; }
+  .btn-warn    { background: var(--warn);    color: #000; }
+  .btn-ghost   { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-sm { padding: 4px 12px; font-size: 12px; }
+  .flex { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .gap { margin-bottom: 12px; }
+
+  /* ── 表格 ── */
+  table { width:100%; border-collapse:collapse; }
+  th { background: rgba(0,212,255,.1); color: var(--primary); font-size:12px; text-align:left; padding:8px 12px; border-bottom:1px solid var(--border); }
+  td { padding:8px 12px; border-bottom:1px solid rgba(26,58,92,.5); color: var(--text); vertical-align:middle; }
+  tr:hover td { background: rgba(0,212,255,.03); }
+  input[type=text], input[type=number], select {
+    background: #091525; color: var(--text);
+    border: 1px solid var(--border); border-radius:5px;
+    padding: 5px 10px; font-size: 13px; width: 100%;
+    outline: none;
+  }
+  input:focus, select:focus { border-color: var(--primary); }
+
+  /* ── 等级徽章 ── */
+  .lv { display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700; }
+  .lv1{background:rgba(205,127,50,.2);color:var(--lv1);border:1px solid var(--lv1);}
+  .lv2{background:rgba(192,192,192,.2);color:var(--lv2);border:1px solid var(--lv2);}
+  .lv3{background:rgba(255,215,0,.2);color:var(--lv3);border:1px solid var(--lv3);}
+  .lv4{background:rgba(255,69,0,.2);color:var(--lv4);border:1px solid var(--lv4);}
+  .lv5{background:rgba(255,0,255,.2);color:var(--lv5);border:1px solid var(--lv5);}
+
+  /* ── Toast ── */
+  #toast { position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px; }
+  .toast-item { padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;animation:slideIn .3s ease;max-width:300px; }
+  .toast-ok   { background:rgba(0,230,118,.15);color:var(--success);border:1px solid var(--success); }
+  .toast-err  { background:rgba(255,68,68,.15); color:var(--danger); border:1px solid var(--danger); }
+  @keyframes slideIn { from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1} }
+
+  /* ── 积分榜 ── */
+  .rank-1 td:first-child { color: var(--lv3); font-size:16px; }
+  .rank-2 td:first-child { color: var(--lv2); font-size:14px; }
+  .rank-3 td:first-child { color: var(--lv1); font-size:13px; }
+  .score-bar-wrap { height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden; }
+  .score-bar { height:100%;background:linear-gradient(90deg,var(--primary),#ff00ff);border-radius:3px; }
+
+  /* ── 测试面板 ── */
+  .test-grid { display:grid;grid-template-columns:1fr 1fr;gap:16px; }
+  @media(max-width:700px){.test-grid{grid-template-columns:1fr;}.layout{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎣 捕鱼达人 · 管理后台</h1>
+  <span id="conn-status" class="status err">● 未连接</span>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <nav>
+      <a class="active" onclick="goto('gift-config')">🎁 礼物配置</a>
+      <a onclick="goto('cannon-config')">💣 炮弹配置</a>
+      <a onclick="goto('test-panel')">🧪 测试面板</a>
+      <a onclick="goto('scores')">🏆 积分榜</a>
+      <a onclick="goto('stats-panel')">📊 实时统计</a>
+      <a onclick="goto('api-docs')">📖 对接文档</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+
+    <!-- ══ 礼物 → 炮弹等级配置 ══ -->
+    <div id="gift-config" class="section active">
+      <h2>🎁 礼物 → 炮弹等级配置</h2>
+      <div class="card">
+        <div class="flex gap">
+          <button class="btn btn-success" onclick="addGiftRow()">＋ 新增礼物</button>
+          <button class="btn btn-primary" onclick="saveGiftConfig()">💾 保存配置</button>
+          <button class="btn btn-ghost"   onclick="loadConfig()">🔄 从服务器重新加载</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>礼物名称</th>
+              <th>礼物价值（抖币）</th>
+              <th>炮弹等级</th>
+              <th style="width:80px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="gift-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ 炮弹等级配置 ══ -->
+    <div id="cannon-config" class="section">
+      <h2>💣 炮弹等级配置</h2>
+      <div class="card">
+        <button class="btn btn-primary gap" onclick="saveCannonConfig()" style="margin-bottom:16px">💾 保存炮弹配置</button>
+        <div id="cannon-level-editor"></div>
+      </div>
+    </div>
+
+    <!-- ══ 测试面板 ══ -->
+    <div id="test-panel" class="section">
+      <h2>🧪 模拟测试面板</h2>
+      <div class="test-grid">
+        <div class="card">
+          <h3>模拟礼物事件</h3>
+          <div class="gap">
+            <label>观众ID</label>
+            <input type="text" id="t-viewer-id" placeholder="viewer_001" value="viewer_001">
+          </div>
+          <div class="gap">
+            <label>观众昵称</label>
+            <input type="text" id="t-viewer-name" placeholder="抖音用户" value="测试观众A">
+          </div>
+          <div class="gap">
+            <label>礼物名称</label>
+            <select id="t-gift-name">
+              <option>小心心</option><option>玫瑰</option><option>音乐盒</option>
+              <option>嘉年华</option><option>火箭</option><option>飞机</option>
+            </select>
+          </div>
+          <button class="btn btn-success" onclick="testGift()">🚀 发送礼物事件</button>
+        </div>
+
+        <div class="card">
+          <h3>模拟坐标指令</h3>
+          <div class="gap">
+            <label>观众ID（必须已有炮台）</label>
+            <input type="text" id="c-viewer-id" placeholder="viewer_001" value="viewer_001">
+          </div>
+          <div class="flex gap">
+            <div style="flex:1"><label>X 坐标</label><input type="number" id="c-x" value="640" min="0"></div>
+            <div style="flex:1"><label>Y 坐标</label><input type="number" id="c-y" value="360" min="0"></div>
+          </div>
+          <button class="btn btn-warn" onclick="testCoordinate()">🎯 发送坐标指令</button>
+        </div>
+
+        <div class="card">
+          <h3>模拟弹幕评论（自动解析坐标）</h3>
+          <div class="gap">
+            <label>观众ID</label>
+            <input type="text" id="cm-viewer-id" placeholder="viewer_001" value="viewer_001">
+          </div>
+          <div class="gap">
+            <label>评论内容（格式：x:300 y:400 或 300,400 或 炮:300,400）</label>
+            <input type="text" id="cm-comment" placeholder="x:300 y:400" value="x:640 y:360">
+          </div>
+          <button class="btn btn-primary" onclick="testComment()">💬 发送评论</button>
+        </div>
+
+        <div class="card">
+          <h3>快捷批量测试</h3>
+          <p style="color:var(--muted);margin-bottom:10px;font-size:12px">快速测试多个观众同时刷礼物</p>
+          <div class="flex">
+            <button class="btn btn-ghost btn-sm" onclick="batchTest(3)">3人测试</button>
+            <button class="btn btn-ghost btn-sm" onclick="batchTest(5)">5人测试</button>
+            <button class="btn btn-ghost btn-sm" onclick="batchTest(8)">满屏测试</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 积分榜 ══ -->
+    <div id="scores" class="section">
+      <h2>🏆 积分排行榜</h2>
+      <div class="card">
+        <div class="flex gap" style="margin-bottom:16px">
+          <button class="btn btn-ghost" onclick="loadScores()">🔄 刷新</button>
+          <button class="btn btn-danger" onclick="clearScores()">🗑 清空积分（危险）</button>
+          <span style="color:var(--muted);font-size:12px">数据保留30天，过期自动清理</span>
+        </div>
+        <table id="score-table">
+          <thead>
+            <tr><th>#</th><th>观众</th><th>总积分</th><th>开炮次数</th><th>积分条</th></tr>
+          </thead>
+          <tbody id="score-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ 实时统计 ══ -->
+    <div id="stats-panel" class="section">
+      <h2>📊 实时统计</h2>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px" id="stat-cards">
+        <div class="card" style="text-align:center">
+          <div style="font-size:2rem;color:var(--primary)" id="s-players">–</div>
+          <div style="color:var(--muted);font-size:12px;margin-top:4px">累计玩家</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:2rem;color:var(--warn)" id="s-fires">–</div>
+          <div style="color:var(--muted);font-size:12px;margin-top:4px">总开炮次数</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:2rem;color:#00e676" id="s-score">–</div>
+          <div style="color:var(--muted);font-size:12px;margin-top:4px">总积分</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:2rem;color:var(--lv3)" id="s-today-fires">–</div>
+          <div style="color:var(--muted);font-size:12px;margin-top:4px">今日开炮</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:2rem;color:var(--lv4)" id="s-today-score">–</div>
+          <div style="color:var(--muted);font-size:12px;margin-top:4px">今日积分</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:2rem;color:var(--lv2)" id="s-clients">–</div>
+          <div style="color:var(--muted);font-size:12px;margin-top:4px">在线屏幕数</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">🏅 当前榜首</h3>
+        <div id="s-top-player" style="color:var(--muted)">暂无数据</div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">⚙️ 游戏控制</h3>
+        <div class="flex">
+          <button class="btn btn-warn" onclick="resetGame(false)">🔄 重置炮台（保留积分）</button>
+          <button class="btn btn-danger" onclick="resetGame(true)">💥 完全重置（清空积分）</button>
+          <button class="btn btn-ghost" onclick="loadStats()">🔄 刷新统计</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 对接文档 ══ -->
+    <div id="api-docs" class="section">
+      <h2>📖 抖音直播 SDK 对接文档</h2>
+      <div class="card">
+        <h3>系统架构</h3>
+        <pre style="background:#050e1a;padding:16px;border-radius:8px;font-size:12px;overflow-x:auto;color:#a0c8e0">抖音直播 SDK
+    ↓ 礼物事件 / 评论事件
+Node.js 服务器 (server.js)
+    ↓ WebSocket 实时推送
+浏览器游戏界面 (index.html)</pre>
+
+        <h3>礼物事件接入</h3>
+        <pre style="background:#050e1a;padding:16px;border-radius:8px;font-size:12px;overflow-x:auto;color:#a0c8e0">// 在你的抖音 SDK 回调中调用：
+fetch('http://your-server:3000/api/gift', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    viewerId:    user.openId,      // 观众唯一ID（必填）
+    viewerName:  user.nickname,   // 昵称（可选）
+    viewerAvatar: user.avatar,    // 头像URL（可选）
+    giftName:    gift.giftName,   // 礼物名称（必填，需在配置表中存在）
+    giftCount:   gift.count       // 数量（可选，默认1）
+  })
+});</pre>
+
+        <h3>评论坐标指令接入</h3>
+        <pre style="background:#050e1a;padding:16px;border-radius:8px;font-size:12px;overflow-x:auto;color:#a0c8e0">// 在你的评论回调中调用：
+fetch('http://your-server:3000/api/comment', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    viewerId:   user.openId,
+    viewerName: user.nickname,
+    comment:    comment.text   // 系统自动解析坐标
+  })
+});
+
+// 支持的坐标格式（观众在直播间评论区输入）：
+// "x:300 y:450"   ← 推荐格式
+// "x=300,y=450"
+// "炮:300,450"
+// "300,450"</pre>
+
+        <h3>API 接口一览</h3>
+        <table>
+          <tr><th>方法</th><th>路径</th><th>说明</th></tr>
+          <tr><td>POST</td><td>/api/gift</td><td>触发礼物事件（创建炮台）</td></tr>
+          <tr><td>POST</td><td>/api/comment</td><td>发送评论（解析坐标指令）</td></tr>
+          <tr><td>GET</td><td>/api/scores</td><td>获取排行榜（聚合）</td></tr>
+          <tr><td>POST</td><td>/api/scores</td><td>提交积分记录</td></tr>
+          <tr><td>GET</td><td>/api/config</td><td>获取当前配置</td></tr>
+          <tr><td>POST</td><td>/api/config</td><td>保存配置</td></tr>
+          <tr><td>GET</td><td>/api/admin/scores</td><td>获取详细积分记录</td></tr>
+          <tr><td>DELETE</td><td>/api/admin/scores</td><td>清空所有积分</td></tr>
+        </table>
+
+        <h3>游戏规则说明</h3>
+        <ul style="line-height:2;padding-left:20px;color:var(--muted)">
+          <li>观众刷礼物 → 屏幕随机位置出现对应等级的炮台，显示观众头像和昵称</li>
+          <li>观众在直播间评论区输入坐标（如 "x:300 y:400"）→ 炮台瞄准并立即开炮</li>
+          <li>倒计时结束前未输入坐标 → 系统自动瞄准最近的鱼开炮</li>
+          <li>命中范围内的鱼全部捕获，积分 = 鱼的基础分 × 炮弹等级倍率</li>
+          <li>积分保存30天，自动清理过期数据</li>
+        </ul>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = `http://${location.hostname}:3000/api`;
+const WS_URL = `ws://${location.hostname}:3000`;
+let config = null;
+let ws = null;
+
+// ── 导航 ────────────────────────────────────────────────────────────────────
+function goto(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'scores')       loadScores();
+  if (id === 'stats-panel')  loadStats();
+}
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+function toast(msg, type = 'ok') {
+  const el = document.createElement('div');
+  el.className = `toast-item toast-${type}`;
+  el.textContent = msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ── WebSocket ────────────────────────────────────────────────────────────────
+function connectWS() {
+  ws = new WebSocket(WS_URL);
+  ws.onopen = () => {
+    document.getElementById('conn-status').textContent = '● 已连接';
+    document.getElementById('conn-status').className   = 'status ok';
+  };
+  ws.onclose = () => {
+    document.getElementById('conn-status').textContent = '● 未连接';
+    document.getElementById('conn-status').className   = 'status err';
+    setTimeout(connectWS, 3000);
+  };
+  ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+    if (msg.type === 'config') { config = msg.data; renderGiftTable(); renderCannonEditor(); }
+  };
+}
+
+// ── 加载配置 ─────────────────────────────────────────────────────────────────
+async function loadConfig() {
+  try {
+    const res = await fetch(`${API}/config`);
+    config = await res.json();
+    renderGiftTable();
+    renderCannonEditor();
+    toast('配置加载成功');
+  } catch (e) {
+    toast('加载失败：' + e.message, 'err');
+  }
+}
+
+// ── 礼物配置表格 ─────────────────────────────────────────────────────────────
+function renderGiftTable() {
+  if (!config) return;
+  const tbody = document.getElementById('gift-table-body');
+  tbody.innerHTML = '';
+  (config.giftMappings || []).forEach((row, i) => {
+    tbody.innerHTML += `
+    <tr>
+      <td><input type="text" value="${esc(row.giftName)}" onchange="config.giftMappings[${i}].giftName=this.value"></td>
+      <td><input type="number" value="${row.giftValue}" min="1" onchange="config.giftMappings[${i}].giftValue=+this.value" style="width:100px"></td>
+      <td>
+        <select onchange="config.giftMappings[${i}].cannonLevel=+this.value">
+          ${[1,2,3,4,5].map(l => `<option value="${l}" ${row.cannonLevel==l?'selected':''}>${l} - ${(config.cannonLevels||{})[l]?.name||'Lv'+l}</option>`).join('')}
+        </select>
+      </td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeGiftRow(${i})">删除</button></td>
+    </tr>`;
+  });
+  // 更新下拉礼物列表
+  const sel = document.getElementById('t-gift-name');
+  if (sel && config.giftMappings) {
+    sel.innerHTML = config.giftMappings.map(m => `<option>${esc(m.giftName)}</option>`).join('');
+  }
+}
+
+function addGiftRow() {
+  if (!config) { toast('请先加载配置', 'err'); return; }
+  config.giftMappings = config.giftMappings || [];
+  config.giftMappings.push({ giftName: '新礼物', giftValue: 1, cannonLevel: 1 });
+  renderGiftTable();
+}
+
+function removeGiftRow(i) {
+  config.giftMappings.splice(i, 1);
+  renderGiftTable();
+}
+
+async function saveGiftConfig() {
+  try {
+    await fetch(`${API}/config`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(config) });
+    toast('✅ 礼物配置已保存并推送到游戏');
+  } catch (e) { toast('保存失败：' + e.message, 'err'); }
+}
+
+// ── 炮弹等级配置 ─────────────────────────────────────────────────────────────
+function renderCannonEditor() {
+  if (!config) return;
+  const editor = document.getElementById('cannon-level-editor');
+  const levels = config.cannonLevels || {};
+  editor.innerHTML = '';
+  [1,2,3,4,5].forEach(lv => {
+    const d = levels[lv] || {};
+    editor.innerHTML += `
+    <div class="card" style="border-left:3px solid var(--lv${lv});margin-bottom:14px">
+      <div class="flex" style="margin-bottom:12px">
+        <span class="lv lv${lv}">等级 ${lv}</span>
+        <input type="text" value="${esc(d.name||'')}" placeholder="炮名称" style="width:120px"
+          onchange="config.cannonLevels[${lv}].name=this.value">
+      </div>
+      <div class="flex">
+        <div style="flex:1"><label>炮弹数量</label>
+          <input type="number" value="${d.bulletCount||1}" min="1" max="20"
+            onchange="config.cannonLevels[${lv}].bulletCount=+this.value">
+        </div>
+        <div style="flex:1"><label>威力倍数</label>
+          <input type="number" value="${d.power||1}" min="1" step="0.5"
+            onchange="config.cannonLevels[${lv}].power=+this.value">
+        </div>
+        <div style="flex:1"><label>爆炸半径(px)</label>
+          <input type="number" value="${d.radius||60}" min="30" max="400"
+            onchange="config.cannonLevels[${lv}].radius=+this.value">
+        </div>
+        <div style="flex:1"><label>倒计时(秒)</label>
+          <input type="number" value="${d.timeout||30}" min="10" max="300"
+            onchange="config.cannonLevels[${lv}].timeout=+this.value">
+        </div>
+      </div>
+    </div>`;
+  });
+  // 积分倍率
+  const mults = config.scoreMultipliers || {};
+  editor.innerHTML += `
+  <div class="card">
+    <h3 style="margin-top:0">积分倍率</h3>
+    <div class="flex">
+      ${[1,2,3,4,5].map(lv => `
+      <div style="flex:1;text-align:center">
+        <div class="lv lv${lv}" style="margin-bottom:6px">Lv.${lv}</div>
+        <input type="number" value="${mults[lv]||1}" min="0.1" step="0.5" style="width:80px;text-align:center"
+          onchange="config.scoreMultipliers[${lv}]=+this.value">
+      </div>`).join('')}
+    </div>
+  </div>
+  <div class="card">
+    <div class="flex">
+      <div style="flex:1"><label>最多同时显示炮台数</label>
+        <input type="number" value="${config.maxCannonsOnScreen||8}" min="1" max="20"
+          onchange="config.maxCannonsOnScreen=+this.value"></div>
+    </div>
+  </div>`;
+}
+
+async function saveCannonConfig() {
+  try {
+    await fetch(`${API}/config`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(config) });
+    toast('✅ 炮弹配置已保存并推送到游戏');
+  } catch (e) { toast('保存失败：' + e.message, 'err'); }
+}
+
+// ── 测试 ─────────────────────────────────────────────────────────────────────
+async function testGift() {
+  const viewerId   = document.getElementById('t-viewer-id').value.trim();
+  const viewerName = document.getElementById('t-viewer-name').value.trim();
+  const giftName   = document.getElementById('t-gift-name').value;
+  if (!viewerId) { toast('请输入观众ID', 'err'); return; }
+  try {
+    const res = await fetch(`${API}/gift`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ viewerId, viewerName, giftName, giftCount:1,
+        viewerAvatar:`https://api.dicebear.com/7.x/fun-emoji/svg?seed=${viewerId}` })
+    });
+    const d = await res.json();
+    toast(`✅ 礼物事件已发送 → Lv.${d.event?.cannonLevel} 炮台`);
+  } catch (e) { toast('发送失败：' + e.message, 'err'); }
+}
+
+async function testCoordinate() {
+  const viewerId = document.getElementById('c-viewer-id').value.trim();
+  const x = +document.getElementById('c-x').value;
+  const y = +document.getElementById('c-y').value;
+  if (!viewerId) { toast('请输入观众ID', 'err'); return; }
+  try {
+    await fetch(`${API}/comment`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ viewerId, viewerName: viewerId, comment: `x:${x} y:${y}` })
+    });
+    toast(`✅ 坐标指令 (${x}, ${y}) 已发送`);
+  } catch (e) { toast('发送失败：' + e.message, 'err'); }
+}
+
+async function testComment() {
+  const viewerId = document.getElementById('cm-viewer-id').value.trim();
+  const comment  = document.getElementById('cm-comment').value.trim();
+  if (!viewerId || !comment) { toast('请填写观众ID和评论', 'err'); return; }
+  try {
+    const res = await fetch(`${API}/comment`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ viewerId, viewerName: viewerId, comment })
+    });
+    const d = await res.json();
+    toast(d.parsed ? `✅ 解析坐标 (${d.parsed.x}, ${d.parsed.y})` : '⚠️ 未识别到坐标格式');
+  } catch (e) { toast('发送失败：' + e.message, 'err'); }
+}
+
+async function batchTest(count) {
+  const gifts = ['小心心','音乐盒','嘉年华','火箭','飞机'];
+  for (let i = 0; i < count; i++) {
+    const vid = `batch_${i+1}`;
+    await fetch(`${API}/gift`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        viewerId: vid,
+        viewerName: `观众${i+1}号`,
+        giftName: gifts[i % gifts.length],
+        viewerAvatar: `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${vid}`
+      })
+    });
+    await new Promise(r => setTimeout(r, 300));
+  }
+  toast(`✅ 已发送 ${count} 条礼物事件`);
+}
+
+// ── 积分榜 ────────────────────────────────────────────────────────────────────
+async function loadScores() {
+  try {
+    const res  = await fetch(`${API}/scores`);
+    const data = await res.json();
+    const max  = data[0]?.totalScore || 1;
+    const tbody = document.getElementById('score-tbody');
+    tbody.innerHTML = '';
+    data.forEach((row, i) => {
+      const pct = Math.round(row.totalScore / max * 100);
+      tbody.innerHTML += `
+      <tr class="rank-${i+1}">
+        <td>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i+1}</td>
+        <td>${esc(row.viewerName || row.viewerId)}</td>
+        <td style="color:var(--primary);font-weight:700">${row.totalScore.toLocaleString()}</td>
+        <td>${row.fireCount}</td>
+        <td style="width:120px">
+          <div class="score-bar-wrap"><div class="score-bar" style="width:${pct}%"></div></div>
+        </td>
+      </tr>`;
+    });
+    if (!data.length) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px">暂无积分记录</td></tr>';
+  } catch (e) { toast('加载失败：' + e.message, 'err'); }
+}
+
+async function clearScores() {
+  if (!confirm('⚠️ 确定清空所有积分记录？此操作不可撤销！')) return;
+  try {
+    await fetch(`${API}/admin/scores`, { method: 'DELETE' });
+    toast('✅ 积分已清空');
+    loadScores();
+  } catch (e) { toast('操作失败：' + e.message, 'err'); }
+}
+
+// ── 工具 ─────────────────────────────────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── 实时统计 ───────────────────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res  = await fetch(`${API.replace('/api','')}/api/stats`);
+    const data = await res.json();
+    document.getElementById('s-players').textContent      = data.totalPlayers || 0;
+    document.getElementById('s-fires').textContent        = data.totalFires   || 0;
+    document.getElementById('s-score').textContent        = (data.totalScore  || 0).toLocaleString();
+    document.getElementById('s-today-fires').textContent  = data.todayFires   || 0;
+    document.getElementById('s-today-score').textContent  = (data.todayScore  || 0).toLocaleString();
+    document.getElementById('s-clients').textContent      = data.connectedClients || 0;
+    if (data.topPlayer) {
+      document.getElementById('s-top-player').innerHTML =
+        `<strong style="color:var(--lv3)">${esc(data.topPlayer.viewerName)}</strong>
+         &nbsp;·&nbsp; ${data.topPlayer.totalScore.toLocaleString()} 分
+         &nbsp;·&nbsp; ${data.topPlayer.fireCount} 次开炮`;
+    }
+  } catch (e) { console.warn('Stats load failed:', e.message); }
+}
+
+async function resetGame(clearScores) {
+  const msg = clearScores ? '⚠️ 确定完全重置？将清空所有积分记录！' : '确定重置所有炮台？（积分保留）';
+  if (!confirm(msg)) return;
+  try {
+    await fetch(`${API}/admin/reset`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clearScores })
+    });
+    toast(clearScores ? '✅ 游戏已完全重置' : '✅ 炮台已重置');
+    if (clearScores) loadScores();
+  } catch (e) { toast('失败：' + e.message, 'err'); }
+}
+
+// ── 初始化 ───────────────────────────────────────────────────────────────────
+connectWS();
+loadConfig();
+// 自动每30秒刷新统计
+setInterval(loadStats, 30000);
+</script>
+</body>
+</html>

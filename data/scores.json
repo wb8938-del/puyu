@@ -1,0 +1,47 @@
+[
+  {
+    "viewerId": "test_2_1776923279523",
+    "viewerName": "测试用户2号",
+    "viewerAvatar": "https://api.dicebear.com/7.x/fun-emoji/svg?seed=test_2_1776923279523",
+    "score": 150,
+    "cannonLevel": 1,
+    "fishCaught": 3,
+    "timestamp": 1776923309945
+  },
+  {
+    "viewerId": "test_2_1776923286583",
+    "viewerName": "测试用户2号",
+    "viewerAvatar": "https://api.dicebear.com/7.x/fun-emoji/svg?seed=test_2_1776923286583",
+    "score": 20,
+    "cannonLevel": 1,
+    "fishCaught": 1,
+    "timestamp": 1776923316929
+  },
+  {
+    "viewerId": "test_1_1776923291410",
+    "viewerName": "测试用户1号",
+    "viewerAvatar": "https://api.dicebear.com/7.x/fun-emoji/svg?seed=test_1_1776923291410",
+    "score": 230,
+    "cannonLevel": 1,
+    "fishCaught": 4,
+    "timestamp": 1776923321675
+  },
+  {
+    "viewerId": "test_3_1776923283366",
+    "viewerName": "测试用户3号",
+    "viewerAvatar": "https://api.dicebear.com/7.x/fun-emoji/svg?seed=test_3_1776923283366",
+    "score": 550,
+    "cannonLevel": 3,
+    "fishCaught": 7,
+    "timestamp": 1776923333677
+  },
+  {
+    "viewerId": "test_2_1776923279373",
+    "viewerName": "测试用户2号",
+    "viewerAvatar": "https://api.dicebear.com/7.x/fun-emoji/svg?seed=test_2_1776923279373",
+    "score": 2520,
+    "cannonLevel": 5,
+    "fishCaught": 8,
+    "timestamp": 1776923370355
+  }
+]

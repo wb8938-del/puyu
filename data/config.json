@@ -1,0 +1,23 @@
+{
+  "giftMappings": [
+    { "giftName": "小心心",  "giftValue": 1,    "cannonLevel": 1 },
+    { "giftName": "玫瑰",    "giftValue": 1,    "cannonLevel": 1 },
+    { "giftName": "抖音",    "giftValue": 5,    "cannonLevel": 1 },
+    { "giftName": "音乐盒",  "giftValue": 10,   "cannonLevel": 2 },
+    { "giftName": "嘉年华",  "giftValue": 100,  "cannonLevel": 3 },
+    { "giftName": "火箭",    "giftValue": 500,  "cannonLevel": 4 },
+    { "giftName": "飞机",    "giftValue": 1000, "cannonLevel": 5 },
+    { "giftName": "游轮",    "giftValue": 2000, "cannonLevel": 5 },
+    { "giftName": "豪华游轮","giftValue": 5000, "cannonLevel": 5 }
+  ],
+  "cannonLevels": {
+    "1": { "name": "铜炮",   "bulletCount": 1, "power": 1,  "radius": 60,  "color": "#CD7F32", "glowColor": "#FF9A00", "timeout": 30 },
+    "2": { "name": "银炮",   "bulletCount": 2, "power": 2,  "radius": 85,  "color": "#C0C0C0", "glowColor": "#FFFFFF", "timeout": 40 },
+    "3": { "name": "金炮",   "bulletCount": 3, "power": 4,  "radius": 110, "color": "#FFD700", "glowColor": "#FFFF00", "timeout": 50 },
+    "4": { "name": "火焰炮", "bulletCount": 5, "power": 7,  "radius": 140, "color": "#FF4500", "glowColor": "#FF0000", "timeout": 60 },
+    "5": { "name": "彩虹炮", "bulletCount": 8, "power": 10, "radius": 180, "color": "#FF00FF", "glowColor": "#00FFFF", "timeout": 90 }
+  },
+  "scoreMultipliers": { "1": 1, "2": 1.5, "3": 2.5, "4": 4, "5": 7 },
+  "maxCannonsOnScreen": 8,
+  "autoFireOnTimeout": true
+}
