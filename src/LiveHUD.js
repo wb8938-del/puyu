@@ -139,11 +139,10 @@ window.LiveHUD = class LiveHUD {
     // 直播红点脉动
     if (!this._dotTick) this._dotTick = 0;
     this._dotTick += 0.05;
-    const alpha = 0.7 + Math.sin(this._dotTick) * 0.3;
-    this._liveLabel.alpha = alpha;
+    this._liveLabel.alpha = 0.7 + Math.sin(this._dotTick) * 0.3;
 
-    // 活跃炮台数实时刷新
-    if (this.cannonMgr) {
+    // 活跃炮台数实时刷新（null 保护）
+    if (this.cannonMgr && this._statTexts && this._statTexts.cannons) {
       this._statTexts.cannons.text = `💣 炮台: ${this.cannonMgr.activeCannons}`;
     }
   }

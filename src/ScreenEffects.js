@@ -202,9 +202,17 @@ window.ScreenEffects = class ScreenEffects {
   }
 
   onResize() {
-    this._comboLabel.x    = this.app.screen.width / 2;
-    this._comboLabel.y    = this.app.screen.height * 0.35;
-    this._comboSubLabel.x = this.app.screen.width / 2;
-    this._comboSubLabel.y = this.app.screen.height * 0.35 + 55;
+    if (this._comboLabel) {
+      this._comboLabel.x    = this.app.screen.width / 2;
+      this._comboLabel.y    = this.app.screen.height * 0.35;
+    }
+    if (this._comboSubLabel) {
+      this._comboSubLabel.x = this.app.screen.width / 2;
+      this._comboSubLabel.y = this.app.screen.height * 0.35 + 55;
+    }
+    // Redraw flash background for new size
+    if (this._flashGfx) {
+      this._flashGfx.clear();
+    }
   }
 };

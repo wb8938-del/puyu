@@ -42,39 +42,40 @@ window.WaterBackground = class WaterBackground {
   }
 
   // ── 加载背景图 ────────────────────────────────────────────────────────────
+  // 路径由 Config.js 的 bgImage 字段控制，一处配置全局生效
   async _tryLoadBgImage() {
-    const prefix = window.GameConfig.bgImagePrefix || 'images/';
-    const candidates = [
-      `${prefix}bg/background.png`,
-      `${prefix}bg.png`,
-      `${prefix}background.png`,
-      `${prefix}bg/bg.jpg`,
-      `${prefix}bg.jpg`,
-      `${prefix}seabed.png`,
-      `${prefix}ocean_bg.png`,
-    ];
+    const path = window.GameConfig.bgImage;
 
-    for (const path of candidates) {
-      try {
-        const tex    = await PIXI.Assets.load(path);
-        const sprite = new PIXI.Sprite(tex);
-        sprite.width  = this._w();
-        sprite.height = this._h();
-        // 插在矢量色块之上（index 1），保留气泡等覆盖层
-        this.container.addChildAt(sprite, 1);
-        this._bgSprite = sprite;
-        console.log(`[WaterBackground] ✅ 背景图已加载: ${path}`);
-        return;
-      } catch (_) { /* 继续尝试 */ }
+    // 未配置或空字符串 → 使用内置渐变色
+    if (!path) {
+      console.log('[WaterBackground] bgImage 未配置，使用内置渐变色');
+      return;
     }
-    console.log('[WaterBackground] ℹ 未找到原始背景图，使用内置渐变底色');
+
+    try {
+      const tex    = await PIXI.Assets.load(path);
+      const sprite = new PIXI.Sprite(tex);
+      sprite.width  = this._w();
+      sprite.height = this._h();
+      // 插在矢量色块之上（index 1），保留气泡/光柱等覆盖层
+      this.container.addChildAt(sprite, 1);
+      this._bgSprite = sprite;
+      console.log(`[WaterBackground] ✅ 背景图加载成功: ${path}`);
+    } catch (e) {
+      console.warn(`[WaterBackground] ⚠ 背景图加载失败: ${path}`);
+      console.warn('  → 请检查路径是否正确，或在 Config.js 中把 bgImage 改为实际文件路径');
+    }
   }
 
   // ── 接入原版水波纹着色器 ──────────────────────────────────────────────────
   _applyOriginalWaterFilter() {
-    // 原游戏 WaterFilter.js 可能用以下任意一种方式导出
+    // 是否启用原版着色器由 Config.js 的 useOriginalWaterFilter 控制
+    if (!window.GameConfig.useOriginalWaterFilter) {
+      console.log('[WaterBackground] useOriginalWaterFilter=false，跳过着色器');
+      return;
+    }
     const FilterClass =
-      window.WaterFilter         ||   // 最常见：class WaterFilter
+      window.WaterFilter         ||
       window.WaterRippleFilter   ||
       window.WaterShaderFilter   ||
       (window.PIXI && window.PIXI.filters && window.PIXI.filters.WaterFilter);
